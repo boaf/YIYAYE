@@ -1,0 +1,55 @@
+body * {
+    font-family: 'Source Code Pro', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+a {
+    text-decoration: none;
+}
+
+b {
+    background-color: #999;
+    border: 0px solid #999;
+    border-radius: 5px;
+    color: #fff;
+    padding: 0 6px;
+}
+
+pre {
+    color: #7a7a7a;
+    padding-left: 10px;
+}
+
+pre a:hover {
+    border-bottom: dotted 1px #6aa4bf;
+}
+
+.yiyaye-operator, .yiyaye-keyword, .yiyaye-prefix-a {
+    font-weight: bold;
+}
+
+.yiyaye-operator {
+    color: #417a96;
+}
+
+.yiyaye-keyword {
+    color: #ff00ff;
+}
+
+.yiyaye-prefix-a {
+    color: #c64006;
+}
+
+.yiyaye-prefix-b {
+    color: purple;
+}
+
+:focus {
+    background: #00f;
+    border: 0px solid #00f;
+    border-radius: 5px;
+    color: #fff;
+    outline: none;
+    padding: 0 6px;
+}
