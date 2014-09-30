@@ -45,6 +45,14 @@ pre a:hover {
     color: purple;
 }
 
+.yiyaye-template-link {
+    color: #990000;
+    text-decoration: none;
+    border-radius: 3px;
+    border: 1px solid #c4c4c4;
+    font-weight: normal;
+}
+
 :focus {
     background: #00f;
     border: 0px solid #00f;
