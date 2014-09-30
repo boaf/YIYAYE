@@ -184,24 +184,21 @@ var setupStyle = function () {
     var elems = qsa('a');
 
     var i = elems.length;
-    var classes, elem, text, j, action;
+    var elem, text, j, action, tLink;
 
     while (i--) {
-        classes = [];
         elem = elems[i];
         text = elem.textContent;
 
         if (rtmlOperators.indexOf(text) > -1)
-            classes.push('yiyaye-operator');
+            elem.classList.add('yiyaye-operator');
         else if (rtmlKeywords.indexOf(text) > -1)
-            classes.push('yiyaye-keyword');
+            elem.classList.add('yiyaye-keyword');
 
         if (text.indexOf('@') > -1)
-            classes.push('yiyaye-prefix-a');
+            elem.classList.add('yiyaye-prefix-a');
         else if (text.indexOf(':') > -1)
-            classes.push('yiyaye-prefix-b');
-
-        elem.className = classes.join(' ');
+            elem.classList.add('yiyaye-prefix-b');
 
         j = pageActions.length;
         while (j--) {
