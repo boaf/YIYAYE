@@ -4,16 +4,6 @@ Chrome extension, yo.
 
 Only relevant if you use any Yahoo! Editor on the daily.
 
-### TODO
-
-```
-- Display store name in floating box
-    - Should cache store id -> name in localStorage db
-- Autofill file name on file upload
-- Template text string search function
-- Floating controls bar on "Update" pages
-```
-
 # License
 
 Copyright (c) 2014 boaf
