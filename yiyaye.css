@@ -61,3 +61,20 @@
     outline: none;
     padding: 0 6px;
 }
+
+.sbs_body textarea, .sbs_body [type=text] {
+    width: 90%;
+}
+
+.sbs_body > form > font > center:nth-child(1) > table > tbody > tr:nth-child(1) {
+    position: fixed;
+    top: 0;
+    right: 0;
+    box-shadow: 0px 0px 7px 0px #333;
+    background: #F8F8F8;
+}
+
+.sbs_body > form > font > center:nth-child(1) > table > tbody > tr:nth-child(1) > td,
+body > form > font > center:nth-child(1) > table > tbody > tr:nth-child(1) > td > font > table {
+    background: inherit;
+}
