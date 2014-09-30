@@ -1,6 +1,6 @@
 {
     "name": "YIYAYE",
-    "version": "0.1.2",
+    "version": "0.2.2",
     "description": "YIYAYE Initiates Your Advanced Yahoo! Editor",
 
     "content_scripts": [
@@ -10,10 +10,10 @@
                 "*://*.us-dc2-edit.store.yahoo.net/RT/NEWEDIT.*/*"
             ],
             "js": ["yiyaye.js"],
+            "css": ["yiyaye.css"],
             "run_at": "document_end"
         }
     ],
-    "web_accessible_resources": ["yiyaye.css"],
 
     "manifest_version": 2
 }

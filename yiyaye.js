@@ -212,16 +212,12 @@ var setupStyle = function () {
         }
     }
 
-    var cssURL = chrome.extension.getURL('yiyaye.css');
-    var cssLink = document.createElement('link');
-    cssLink.rel = 'stylesheet';
-    cssLink.href = cssURL;
-    document.getElementsByTagName('head')[0].appendChild(cssLink);
+    document.body.classList.add('yiyaye-template');
 };
 
 (function () {
-    if (! isTemplatePage()) return;
-
-    setupKeyCommands();
-    setupStyle();
+    if (isTemplatePage()) {
+        setupKeyCommands();
+        setupStyle();
+    }
 })();
