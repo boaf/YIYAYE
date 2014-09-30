@@ -195,10 +195,14 @@ var setupStyle = function () {
         else if (rtmlKeywords.indexOf(text) > -1)
             elem.classList.add('yiyaye-keyword');
 
-        if (text.indexOf('@') > -1)
+        if (text.search('@') > -1)
             elem.classList.add('yiyaye-prefix-a');
-        else if (text.indexOf(':') > -1)
+        else if (text.search(':') > -1)
             elem.classList.add('yiyaye-prefix-b');
+
+        if (elem.href.search(/\?e=/) > -1) {
+            elem.previousElementSibling.classList.add('yiyaye-template-link');
+        }
 
         j = pageActions.length;
         while (j--) {
