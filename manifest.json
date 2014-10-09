@@ -1,6 +1,6 @@
 {
     "name": "YIYAYE",
-    "version": "0.2.2",
+    "version": "0.3.0",
     "description": "YIYAYE Initiates Your Advanced Yahoo! Editor",
 
     "content_scripts": [
