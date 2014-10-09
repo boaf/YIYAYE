@@ -1,7 +1,7 @@
-var qs = function (selector, elem) {
+var $ = function (selector, elem) {
     return (elem || document).querySelector(selector);
 };
-var qsa = function (selector, elem) {
+var $$ = function (selector, elem) {
     return (elem || document).querySelectorAll(selector);
 };
 
@@ -152,7 +152,7 @@ var keyCommands = pageActions.reduce(function (obj, action) {
 }, {});
 
 var isTemplatePage = function () {
-    return !! qs('img[alt="Delete Template"]');
+    return !! $('img[alt="Delete Template"]');
 };
 
 var setupKeyCommands = function () {
@@ -167,13 +167,13 @@ var setupKeyCommands = function () {
         if (typeof command === 'function') {
             elem = document.activeElement;
             if (elem.toString() === '[object HTMLBodyElement]') {
-                elem = qsa('b')[1];
+                elem = $$('b')[1];
                 if (! elem)
-                    elem = qsa('a[href^="javascript:document"]')[1];
+                    elem = $$('a[href^="javascript:document"]')[1];
             }
             command(elem);
         } else if (typeof command === 'string') {
-            titleElem = qs('a[title="' + command + '"]');
+            titleElem = $('a[title="' + command + '"]');
             if (titleElem)
                 window.location.href = titleElem.href;
         }
@@ -181,7 +181,7 @@ var setupKeyCommands = function () {
 };
 
 var setupStyle = function () {
-    var elems = qsa('a');
+    var elems = $$('a');
 
     var i = elems.length;
     var elem, text, j, action, tLink;
@@ -216,11 +216,11 @@ var setupStyle = function () {
 };
 
 var setupFileUpload = function () {
-    [].filter.call(qsa('form'), function (form) {
-        return qs('input[type="file"]', form);
+    [].filter.call($$('form'), function (form) {
+        return $('input[type="file"]', form);
     }).forEach(function (form) {
-        var file = qs('input[type="file"]');
-        var text = qs('input[type="text"]');
+        var file = $('input[type="file"]');
+        var text = $('input[type="text"]');
         file.addEventListener('change', function () {
             text.value = file.value.split('\\')[2];
         });
