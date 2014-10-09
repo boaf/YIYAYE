@@ -215,9 +215,22 @@ var setupStyle = function () {
     document.body.classList.add('yiyaye-template');
 };
 
+var setupFileUpload = function () {
+    [].filter.call(qsa('form'), function (form) {
+        return qs('input[type="file"]', form);
+    }).forEach(function (form) {
+        var file = qs('input[type="file"]');
+        var text = qs('input[type="text"]');
+        file.addEventListener('change', function () {
+            text.value = file.value.split('\\')[2];
+        });
+    });
+};
+
 (function () {
     if (isTemplatePage()) {
         setupKeyCommands();
         setupStyle();
     }
+    setupFileUpload();
 })();
