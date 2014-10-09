@@ -151,8 +151,18 @@ var keyCommands = pageActions.reduce(function (obj, action) {
     return obj;
 }, {});
 
+var findElementsWithText = function (els, text) {
+    return [].filter.call(els, function (el) {
+        return el.textContent.match(new RegExp(text));
+    });
+}
+
 var isTemplatePage = function () {
     return !! $('img[alt="Delete Template"]');
+};
+
+var isTemplateListPage = function () {
+    return !! findElementsWithText($$('b'), 'Built-In Templates').length;
 };
 
 var setupKeyCommands = function () {
@@ -208,7 +218,8 @@ var setupStyle = function () {
         while (j--) {
             action = pageActions[j];
             if (action.name === elem.title)
-                elem.appendChild(document.createTextNode('(' + String.fromCharCode(action.keyCode) + ')'))
+                elem.appendChild(document.createTextNode('(' +
+                                 String.fromCharCode(action.keyCode) + ')'))
         }
     }
 
@@ -227,10 +238,118 @@ var setupFileUpload = function () {
     });
 };
 
+var findWordPages = function () {
+    var jobsToDo;
+
+    var finish = function () {
+        postMessage({finished: true});
+        close();
+    };
+
+    var async = function (url, fn) {
+        var request = new XMLHttpRequest();
+        request.open('GET', url);
+
+        request.onload = function () {
+            if (request.status == 200)
+                fn({success: true, response: request.responseText,
+                    templateName: url.match(/\?e=(.+)/)[1]});
+            else
+                fn({success: false});
+
+            if (--jobsToDo == 0)
+                finish();
+        };
+
+        request.send();
+    };
+
+    onmessage = function(data) {
+        var urls = JSON.parse(data.data);
+        jobsToDo = urls.length;
+
+        console.log(urls);
+
+        for (var i = 0, l = urls.length; i < l; i++) {
+            async(urls[i], function (resp) {
+                postMessage(resp);
+            });
+        }
+    };
+};
+
+var templateRegExSearch = function (regexString, urls, oneFn, finalFn) {
+    var workerBlob = new Blob(['(' + findWordPages + ')()'], {type: 'text/javascript'});
+
+    var worker = new Worker(window.URL.createObjectURL(workerBlob));
+
+    worker.onmessage = function (data) {
+        data = data.data;
+        if (data.success && data.response.match(new RegExp(regexString)))
+            oneFn(data.templateName);
+        if (data.finished)
+            finalFn();
+    };
+
+    worker.postMessage(JSON.stringify(urls));
+};
+
+var setupTemplateRegExSearch = function () {
+    var target = findElementsWithText($$('b'), 'Built-In Templates')[0];
+    while ((target = target.parentNode).nodeName != 'TABLE') {
+        // safety in case we don't find a table
+        if (target.nodeName == 'BODY') return;
+    }
+
+    var anchors = $$('a', target.childNodes[0].childNodes[1].childNodes[1]);
+    var templateURLs = [].map.call(anchors, function (a) { return a.href });
+
+    var input = document.createElement('input');
+    var label = document.createElement('label');
+    label.appendChild(document.createTextNode('Search Templates (regex): '));
+    label.appendChild(input);
+
+    var button = document.createElement('button');
+    button.textContent = 'Search';
+
+    var spinner = document.createElement('img');
+    spinner.src = 'http://www.ajaxload.info/cache/FF/FF/FF/00/00/00/38-0.gif';
+    spinner.style.display = 'none';
+
+    button.addEventListener('click', function () {
+        var regexString = input.value;
+        if (regexString == '') return;
+
+        spinner.style.display = 'inline';
+        templateRegExSearch(regexString, templateURLs, function (templateName) {
+            console.log('regex found in template ' + templateName);
+            var el = [].filter.call(anchors, function (a) {
+                return a.textContent == templateName;
+            })[0];
+            el.style.background = 'red';
+            el.style.fontWeight = 'bold';
+            el.style.color = 'white';
+            el.style.padding = '1px';
+        }, function () {
+            spinner.style.display = 'none';
+        });
+    });
+
+    var search = document.createElement('div');
+    search.appendChild(label);
+    search.appendChild(button);
+    search.appendChild(spinner);
+
+    target.parentNode.insertBefore(search, target);
+};
+
 (function () {
     if (isTemplatePage()) {
         setupKeyCommands();
         setupStyle();
+    }
+    if (isTemplateListPage()) {
+        setupTemplateRegExSearch();
     }
     setupFileUpload();
 })();
