@@ -155,7 +155,7 @@ var findElementsWithText = function (els, text) {
     return [].filter.call(els, function (el) {
         return el.textContent.match(new RegExp(text));
     });
-}
+};
 
 var isTemplatePage = function () {
     return !! $('img[alt="Delete Template"]');
@@ -219,7 +219,7 @@ var setupStyle = function () {
             action = pageActions[j];
             if (action.name === elem.title)
                 elem.appendChild(document.createTextNode('(' +
-                                 String.fromCharCode(action.keyCode) + ')'))
+                                 String.fromCharCode(action.keyCode) + ')'));
         }
     }
 
@@ -257,11 +257,15 @@ var findWordPages = function () {
             else
                 fn({success: false});
 
-            if (--jobsToDo == 0)
+            if (--jobsToDo === 0)
                 finish();
         };
 
         request.send();
+    };
+
+    var postBack = function (resp) {
+        postMessage(resp);
     };
 
     onmessage = function(data) {
@@ -271,9 +275,7 @@ var findWordPages = function () {
         console.log(urls);
 
         for (var i = 0, l = urls.length; i < l; i++) {
-            async(urls[i], function (resp) {
-                postMessage(resp);
-            });
+            async(urls[i], postBack);
         }
     };
 };
@@ -302,7 +304,7 @@ var setupTemplateRegExSearch = function () {
     }
 
     var anchors = $$('a', target.childNodes[0].childNodes[1].childNodes[1]);
-    var templateURLs = [].map.call(anchors, function (a) { return a.href });
+    var templateURLs = [].map.call(anchors, function (a) { return a.href; });
 
     var input = document.createElement('input');
     var label = document.createElement('label');
