@@ -319,11 +319,10 @@ var setupTemplateRegExSearch = function () {
     spinner.style.display = 'none';
 
     button.addEventListener('click', function () {
-        var regexString = input.value;
-        if (regexString == '') return;
+        if (input.value === '') return;
 
         spinner.style.display = 'inline';
-        templateRegExSearch(regexString, templateURLs, function (templateName) {
+        templateRegExSearch(input.value, templateURLs, function (templateName) {
             console.log('regex found in template ' + templateName);
             var el = [].filter.call(anchors, function (a) {
                 return a.textContent == templateName;
