@@ -41,6 +41,8 @@ var rtmlKeywords = [
     ":top-buttons", ":two-line", ":up", ":yes", ":variable", ":vertical"
 ];
 
+var lastButtonSelector = 'body > table:nth-child(1) > tbody > tr:nth-child(2) > td > center > table > tbody > tr > td:last-child';
+
 var pageActions = [
     {
         name: 'Previous Link',
@@ -147,7 +149,16 @@ var pageActions = [
 ];
 
 var keyCommands = pageActions.reduce(function (obj, action) {
-    obj[action.keyCode] = action.keyCommand ? action.keyCommand : action.name;
+    if (action.keyCommand) {
+        obj[action.keyCode] = action.keyCommand;
+    } else {
+        var targetEl = $('a[title="' + action.name + '"]');
+        if (! targetEl) {
+            targetEl = $(lastButtonSelector + ' > a');
+            pageActions[pageActions.length - 1].name = targetEl.title;
+        }
+        obj[action.keyCode] = targetEl;
+    }
     return obj;
 }, {});
 
@@ -182,10 +193,8 @@ var setupKeyCommands = function () {
                     elem = $$('a[href^="javascript:document"]')[1];
             }
             command(elem);
-        } else if (typeof command === 'string') {
-            titleElem = $('a[title="' + command + '"]');
-            if (titleElem)
-                window.location.href = titleElem.href;
+        } else if (command.href) {
+            window.location.href = command.href;
         }
     });
 };
@@ -218,8 +227,8 @@ var setupStyle = function () {
         while (j--) {
             action = pageActions[j];
             if (action.name === elem.title)
-                elem.appendChild(document.createTextNode('(' +
-                                 String.fromCharCode(action.keyCode) + ')'));
+                elem.innerHTML = elem.title + ' (' +
+                                 String.fromCharCode(action.keyCode) + ')';
         }
     }
 
