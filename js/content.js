@@ -145,7 +145,7 @@ var pageActions = [
     {
         name: 'Last Edit',
         keyCode: 49 /* 1 */
-    },
+    }
 ];
 
 var keyCommands = pageActions.reduce(function (obj, action) {
@@ -199,7 +199,7 @@ var setupKeyCommands = function () {
     });
 };
 
-var setupStyle = function () {
+var setupTemplateStyle = function () {
     var elems = $$('a');
 
     var i = elems.length;
@@ -222,7 +222,19 @@ var setupStyle = function () {
         if (elem.href.search(/\?e=/) > -1) {
             elem.previousElementSibling.classList.add('yiyaye-template-link');
         }
+    }
 
+    document.body.classList.add('yiyaye-template');
+};
+
+var setupOtherStyle = function () {
+    var elems = $$('a');
+
+    var i = elems.length;
+    var elem, text, j, action, tLink;
+
+    while (i--) {
+        elem = elems[i];
         j = pageActions.length;
         while (j--) {
             action = pageActions[j];
@@ -231,8 +243,6 @@ var setupStyle = function () {
                                  String.fromCharCode(action.keyCode) + ')';
         }
     }
-
-    document.body.classList.add('yiyaye-template');
 };
 
 var setupFileUpload = function () {
@@ -356,10 +366,12 @@ var setupTemplateRegExSearch = function () {
 (function () {
     if (isTemplatePage()) {
         setupKeyCommands();
-        setupStyle();
-    }
-    if (isTemplateListPage()) {
+        setupTemplateStyle();
+    } else if (isTemplateListPage()) {
         setupTemplateRegExSearch();
     }
+
+    if ($('body').className.match(/sbs_body/))
+        setupOtherStyle();
     setupFileUpload();
 })();
