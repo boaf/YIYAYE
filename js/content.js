@@ -382,5 +382,12 @@ var setupTemplateRegExSearch = function () {
 
     if ($('body').className.match(/sbs_body/))
         setupOtherStyle();
+
+    if (!! $('input[value="Create"]')) {
+        $('select').focus();
+    } else if (!! $('img[alt="Database Upload"]')) {
+        $('input[type="text"]').select();
+    }
+
     setupFileUpload();
 })();
