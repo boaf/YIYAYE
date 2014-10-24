@@ -1,14 +1,20 @@
-.yiyaye-template * {
+.yiyaye-template form *,
+.sbs_body > table *, .sbs_body > table + p * {
     font-family: 'Source Code Pro', 'Courier New', monospace;
     font-size: 13px;
     line-height: 1.4;
 }
 
-.yiyaye-template a {
+.yiyaye-template form a,
+.sbs_body > table a, .sbs_body > table + p a {
     text-decoration: none;
 }
 
-.yiyaye-template b {
+.sbs_body > table a, .sbs_body > table + p a {
+    padding: 3px;
+}
+
+.yiyaye-template form b {
     background-color: #999;
     border: 0px solid #999;
     border-radius: 5px;
@@ -53,7 +59,7 @@
     font-weight: normal;
 }
 
-.yiyaye-template :focus {
+.yiyaye-template a:focus {
     background: #00f;
     border: 0px solid #00f;
     border-radius: 5px;
@@ -63,7 +69,7 @@
 }
 
 .sbs_body textarea, .sbs_body [type=text] {
-    width: 90%;
+    width: 80%;
 }
 
 .sbs_body > form > font > center:nth-child(1) > table > tbody > tr:nth-child(1) {
@@ -77,4 +83,8 @@
 .sbs_body > form > font > center:nth-child(1) > table > tbody > tr:nth-child(1) > td,
 body > form > font > center:nth-child(1) > table > tbody > tr:nth-child(1) > td > font > table {
     background: inherit;
+}
+
+.sbs_body input, .sbs_body select, .sbs_body button {
+    margin: 2px;
 }
