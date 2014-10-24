@@ -341,6 +341,12 @@ var setupTemplateRegExSearch = function () {
         if (input.value === '') return;
 
         spinner.style.display = 'inline';
+
+        [].forEach.call(anchors, function (a) {
+            a.style.background = 'white';
+            a.style.padding = '1px';
+        });
+
         templateRegExSearch(input.value, templateURLs, function (templateName) {
             console.log('regex found in template ' + templateName);
             var el = [].filter.call(anchors, function (a) {
@@ -349,9 +355,12 @@ var setupTemplateRegExSearch = function () {
             el.style.background = 'red';
             el.style.fontWeight = 'bold';
             el.style.color = 'white';
-            el.style.padding = '1px';
         }, function () {
             spinner.style.display = 'none';
+            [].forEach.call(anchors, function (a) {
+                if (a.style.background == 'white')
+                    a.style.background = '';
+            });
         });
     });
 
