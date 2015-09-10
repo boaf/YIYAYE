@@ -1,9 +1,29 @@
-var $ = function (selector, elem) {
+var DEBUG = false;
+
+var arrProto = Array.prototype;
+
+function log () {
+    if (!DEBUG) return;
+
+    var args = [
+        '%c YIYAYE Debug %c',
+        'background-color:#eee;color:#c23300;display:inline-block;' +
+            'padding:2px;',
+        ''
+    ];
+    console.log.apply(console, args.concat(arrProto.slice.call(arguments)));
+}
+
+function $ (selector, elem) {
     return (elem || document).querySelector(selector);
-};
-var $$ = function (selector, elem) {
+}
+
+function $$ (selector, elem) {
     return (elem || document).querySelectorAll(selector);
-};
+}
+
+
+var keyRepeatTimeout = 1000;
 
 var rtmlOperators = [
     "<", "<=", "<=>", ">", ">=", "ACCUMULATE", "ACTION", "AND", "APPEND",
@@ -41,7 +61,8 @@ var rtmlKeywords = [
     ":top-buttons", ":two-line", ":up", ":yes", ":variable", ":vertical"
 ];
 
-var lastButtonSelector = 'body > table:nth-child(1) > tbody > tr:nth-child(2) > td > center > table > tbody > tr > td:last-child';
+var lastButtonSelector = 'body > table:nth-child(1) > tbody > tr:nth-child(2)' +
+                         ' > td > center > table > tbody > tr > td:last-child';
 
 var pageActions = [
     {
@@ -51,6 +72,7 @@ var pageActions = [
             while ((el = el.nextSibling) && el.nodeType !== 9) {
                 if (el.nodeType === 1 && el.nodeName == 'A' &&
                     el.getAttribute('title') == 'Select') {
+                    log('Previous link', el);
                     el.focus();
                     break;
                 }
@@ -64,6 +86,7 @@ var pageActions = [
             while ((el = el.previousSibling) && el.nodeType !== 9) {
                 if (el.nodeType === 1 && el.nodeName == 'A' &&
                     el.getAttribute('title') == 'Select') {
+                    log('Next link', el);
                     el.focus();
                     break;
                 }
@@ -145,61 +168,118 @@ var pageActions = [
     {
         name: 'Last Edit',
         keyCode: 49 /* 1 */
+    },
+    {
+        name: 'First Link',
+        keyCode: 103, /* g */
+        repeat: true,
+        keyCommand: function () {
+            var el = $('.yiyaye-template form pre a');
+            if (el) {
+                log('Going to first link', el);
+                el.focus();
+            }
+        }
+    },
+    {
+        name: 'Last Link',
+        keyCode: 71, /* G */
+        keyCommand: function () {
+            var el = [].pop.call($$('.yiyaye-template form pre a'));
+            if (el) {
+                log('Going to last link', el);
+                el.focus();
+            }
+        }
     }
 ];
 
-var keyCommands = pageActions.reduce(function (obj, action) {
+var keyCommands = pageActions.reduce(function (obj, action, i) {
+    var cmd = {};
+
     if (action.keyCommand) {
-        obj[action.keyCode] = action.keyCommand;
+         cmd.cmd = action.keyCommand;
     } else {
-        var targetEl = $('a[title="' + action.name + '"]');
-        if (! targetEl) {
-            targetEl = $(lastButtonSelector + ' > a');
-            pageActions[pageActions.length - 1].name = targetEl.title;
+        var targetEl;
+        if (action.name == 'Last Edit' && (targetEl = $(lastButtonSelector + ' > a'))) {
+        } else if (! (targetEl = $('a[title="' + action.name + '"]'))) {
+            return obj;
         }
-        obj[action.keyCode] = targetEl;
+        if (! targetEl) {
+            if ((targetEl = $(lastButtonSelector + ' > a'))) {
+                pageActions[i].name = targetEl.title;
+            } else {
+                /* something is wrong, don't do anything... */
+                return obj;
+            }
+        }
+        cmd.cmd = targetEl;
     }
+
+    if (action.repeat)
+        cmd.repeat = true;
+
+    obj[action.keyCode] = cmd;
     return obj;
 }, {});
 
-var findElementsWithText = function (els, text) {
-    return [].filter.call(els, function (el) {
-        return el.textContent.match(new RegExp(text));
-    });
-};
+['forEach', 'reduce', 'map', 'filter'].forEach(function (method) {
+    this['_' + method] = function () {
+        return arrProto[method].apply(arguments[0], arrProto.slice.call(arguments, 1));
+    };
+});
 
-var isTemplatePage = function () {
-    return !! $('img[alt="Delete Template"]');
-};
+var
+    isTemplateEditPage = !! $('img[alt="Delete Template"]'),
 
-var isTemplateListPage = function () {
-    return !! findElementsWithText($$('b'), 'Built-In Templates').length;
-};
+    isTemplateListPage = !! $('img[alt="Delete Uncalled Templates"]'),
 
-var setupKeyCommands = function () {
+    isTemplateOperatorCreateOrEdit = !! (
+        _filter($$('td'), function (el) {
+            return el.textContent.match(/Complex: /);
+        }).length ||
+        ($('input[value="Update"]') && $('a[title="Database Upload"]'))
+    ),
+
+    isVariablesOrPageEdit = !! ($('input[value="New Property"]') || $('input[value="Define New Variable"]'));
+
+function setupKeyCommands () {
+    var keyStart = null;
     document.addEventListener('keypress', function (evt) {
         var command = keyCommands[evt.keyCode];
 
         if (! command || evt.ctrlKey) return;
 
+        if (command.repeat) {
+            if (keyStart == null) { /* Haven't started repeating yet */
+                keyStart = +new Date();
+                return;
+            } else if ((+new Date()) - keyStart > keyRepeatTimeout) { /* Key repeat timed out */
+                keyStart = null;
+                return;
+            }
+        } else if (keyStart != null) {
+            keyStart = null;
+        }
+
         var elem;
         var titleElem;
 
-        if (typeof command === 'function') {
+        if (typeof command.cmd === 'function') {
             elem = document.activeElement;
             if (elem.toString() === '[object HTMLBodyElement]') {
                 elem = $$('b')[1];
                 if (! elem)
                     elem = $$('a[href^="javascript:document"]')[1];
             }
-            command(elem);
-        } else if (command.href) {
-            window.location.href = command.href;
+            command.cmd(elem);
+        } else if (command.cmd.href) {
+            window.location.href = command.cmd.href;
         }
     });
-};
+}
 
-var setupTemplateStyle = function () {
+function setupTemplateStyle () {
     var elems = $$('a');
 
     var i = elems.length;
@@ -225,9 +305,9 @@ var setupTemplateStyle = function () {
     }
 
     document.body.classList.add('yiyaye-template');
-};
+}
 
-var setupOtherStyle = function () {
+function setupOtherStyle () {
     var elems = $$('a');
 
     var i = elems.length;
@@ -238,14 +318,16 @@ var setupOtherStyle = function () {
         j = pageActions.length;
         while (j--) {
             action = pageActions[j];
-            if (action.name === elem.title)
+            if (action.name === elem.title) {
+                log('Adding ' + String.fromCharCode(action.keyCode) + '(' + action.keyCode + ') to ' + elem.title);
                 elem.innerHTML = elem.title + ' (' +
                                  String.fromCharCode(action.keyCode) + ')';
+            }
         }
     }
-};
+}
 
-var setupFileUpload = function () {
+function setupFileUpload () {
     [].filter.call($$('form'), function (form) {
         return $('input[type="file"]', form);
     }).forEach(function (form) {
@@ -255,9 +337,9 @@ var setupFileUpload = function () {
             text.value = file.value.split('\\')[2];
         });
     });
-};
+}
 
-var findWordPages = function () {
+function findWordPages () {
     var jobsToDo;
 
     var finish = function () {
@@ -297,26 +379,28 @@ var findWordPages = function () {
             async(urls[i], postBack);
         }
     };
-};
+}
 
-var templateRegExSearch = function (regexString, urls, oneFn, finalFn) {
+function templateRegExSearch (regexString, urls, oneFn, finalFn) {
     var workerBlob = new Blob(['(' + findWordPages + ')()'], {type: 'text/javascript'});
 
     var worker = new Worker(window.URL.createObjectURL(workerBlob));
 
     worker.onmessage = function (data) {
         data = data.data;
-        if (data.success && data.response.match(new RegExp(regexString)))
-            oneFn(data.templateName);
+        if (data.success)
+            oneFn(data.templateName, data.response.match(new RegExp(regexString)));
         if (data.finished)
             finalFn();
     };
 
     worker.postMessage(JSON.stringify(urls));
-};
+}
 
-var setupTemplateRegExSearch = function () {
-    var target = findElementsWithText($$('b'), 'Built-In Templates')[0];
+function setupTemplateRegExSearch () {
+    var target = _filter($$('td'), function (el) {
+        return el.textContent.match(/Built-In Templates/);
+    })[0];
     while ((target = target.parentNode).nodeName != 'TABLE') {
         // safety in case we don't find a table
         if (target.nodeName == 'BODY') return;
@@ -324,6 +408,21 @@ var setupTemplateRegExSearch = function () {
 
     var anchors = $$('a', target.childNodes[0].childNodes[1].childNodes[1]);
     var templateURLs = [].map.call(anchors, function (a) { return a.href; });
+
+    var search = document.createElement('div');
+    search.style.position = 'relative';
+    var resultsDiv = document.createElement('div');
+    var styles = {
+        position: 'absolute',
+        background: 'white',
+        boxShadow: '1px 1px 7px 0px hsl(0, 0%, 44%)',
+        width: '400px',
+        top: '0',
+        right: '0',
+        padding: '10px'
+    };
+    var style;
+    for (style in styles) resultsDiv.style[style] = styles[style];
 
     var input = document.createElement('input');
     var label = document.createElement('label');
@@ -337,56 +436,74 @@ var setupTemplateRegExSearch = function () {
     spinner.src = 'data:image/gif;base64,R0lGODlhEAALAPQAAP///wAAANra2tDQ0Orq6gYGBgAAAC4uLoKCgmBgYLq6uiIiIkpKSoqKimRkZL6+viYmJgQEBE5OTubm5tjY2PT09Dg4ONzc3PLy8ra2tqCgoMrKyu7u7gAAAAAAAAAAACH+GkNyZWF0ZWQgd2l0aCBhamF4bG9hZC5pbmZvACH5BAALAAAAIf8LTkVUU0NBUEUyLjADAQAAACwAAAAAEAALAAAFLSAgjmRpnqSgCuLKAq5AEIM4zDVw03ve27ifDgfkEYe04kDIDC5zrtYKRa2WQgAh+QQACwABACwAAAAAEAALAAAFJGBhGAVgnqhpHIeRvsDawqns0qeN5+y967tYLyicBYE7EYkYAgAh+QQACwACACwAAAAAEAALAAAFNiAgjothLOOIJAkiGgxjpGKiKMkbz7SN6zIawJcDwIK9W/HISxGBzdHTuBNOmcJVCyoUlk7CEAAh+QQACwADACwAAAAAEAALAAAFNSAgjqQIRRFUAo3jNGIkSdHqPI8Tz3V55zuaDacDyIQ+YrBH+hWPzJFzOQQaeavWi7oqnVIhACH5BAALAAQALAAAAAAQAAsAAAUyICCOZGme1rJY5kRRk7hI0mJSVUXJtF3iOl7tltsBZsNfUegjAY3I5sgFY55KqdX1GgIAIfkEAAsABQAsAAAAABAACwAABTcgII5kaZ4kcV2EqLJipmnZhWGXaOOitm2aXQ4g7P2Ct2ER4AMul00kj5g0Al8tADY2y6C+4FIIACH5BAALAAYALAAAAAAQAAsAAAUvICCOZGme5ERRk6iy7qpyHCVStA3gNa/7txxwlwv2isSacYUc+l4tADQGQ1mvpBAAIfkEAAsABwAsAAAAABAACwAABS8gII5kaZ7kRFGTqLLuqnIcJVK0DeA1r/u3HHCXC/aKxJpxhRz6Xi0ANAZDWa+kEAA7AAAAAAAAAAAA';
     spinner.style.display = 'none';
 
+    var tempNode;
+
     button.addEventListener('click', function () {
         if (input.value === '') return;
 
         spinner.style.display = 'inline';
+        resultsDiv.innerHTML = '';
 
         [].forEach.call(anchors, function (a) {
             a.style.background = 'white';
             a.style.padding = '1px';
         });
 
-        templateRegExSearch(input.value, templateURLs, function (templateName) {
-            console.log('regex found in template ' + templateName);
+        templateRegExSearch(input.value, templateURLs, function (templateName, match) {
             var el = [].filter.call(anchors, function (a) {
                 return a.textContent == templateName;
             })[0];
-            el.style.background = 'red';
-            el.style.fontWeight = 'bold';
-            el.style.color = 'white';
+            if (match) {
+                console.log('regex found in template ' + templateName);
+
+                var tempNode = document.createElement('div');
+                tempNode.appendChild(el.cloneNode(true));
+                resultsDiv.appendChild(tempNode);
+
+                el.style.background = 'red';
+                el.style.fontWeight = 'bold';
+                el.style.color = 'white';
+            } else {
+                el.style.background = '';
+            }
         }, function () {
             spinner.style.display = 'none';
-            [].forEach.call(anchors, function (a) {
-                if (a.style.background == 'white')
-                    a.style.background = '';
-            });
+            // [].forEach.call(anchors, function (a) {
+            //     if (a.style.background == 'white')
+            //         a.style.background = '';
+            // });
         });
     });
 
-    var search = document.createElement('div');
     search.appendChild(label);
     search.appendChild(button);
     search.appendChild(spinner);
+    search.appendChild(resultsDiv);
 
     target.parentNode.insertBefore(search, target);
-};
+}
 
 (function () {
-    if (isTemplatePage()) {
-        setupKeyCommands();
+    if (isTemplateEditPage || isTemplateOperatorCreateOrEdit)
         setupTemplateStyle();
-    } else if (isTemplateListPage()) {
+
+    if (isTemplateEditPage)
+        setupKeyCommands();
+    else if (isTemplateListPage)
         setupTemplateRegExSearch();
+
+    if ($('body').className.match(/sbs_body/)) {
+        setupOtherStyle();
     }
 
-    if ($('body').className.match(/sbs_body/))
-        setupOtherStyle();
+    var el;
+    if (! isVariablesOrPageEdit &&
+        (el = ($('select') || $('input[type=text]'))))
+            el.focus() && el.select();
 
-    if (!! $('input[value="Create"]')) {
-        $('select').focus();
-    } else if (!! $('img[alt="Database Upload"]')) {
-        $('input[type="text"]').select();
+    if (el = $('.yiyaye-template form pre b')) {
+        window.scrollBy(0, el.getBoundingClientRect().top -
+                           (window.outerHeight / 2));
     }
 
     setupFileUpload();
